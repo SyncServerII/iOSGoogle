@@ -38,6 +38,9 @@ let package = Package(
         ),
         .testTarget(
             name: "iOSGoogleTests",
-            dependencies: ["iOSGoogle"]),
+            dependencies: ["iOSGoogle"],
+            resources: [
+                .copy("ExampleFiles")
+            ]),
     ]
 )
