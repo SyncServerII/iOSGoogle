@@ -29,7 +29,8 @@ let package = Package(
                 "GoogleSignIn", "iOSSignIn", "ServerShared", "iOSShared"
             ],
             resources: [
-                .copy("Resources")
+                // Do *not* name this folder `Resources`. See https://stackoverflow.com/questions/52421999
+                .copy("Images")
             ]),
         .binaryTarget(
             name: "GoogleSignIn",
