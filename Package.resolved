@@ -15,7 +15,7 @@
         "repositoryURL": "https://github.com/SyncServerII/iOSSignIn.git",
         "state": {
           "branch": "master",
-          "revision": "aaa3f1f714f51f92528b70d459809f0cfae0220f",
+          "revision": "50ec37e0bc3057bc3044c2543e7ffe861763528b",
           "version": null
         }
       },
@@ -24,17 +24,17 @@
         "repositoryURL": "https://github.com/kishikawakatsumi/KeychainAccess.git",
         "state": {
           "branch": null,
-          "revision": "8d33ffd6f74b3bcfc99af759d4204c6395a3f918",
-          "version": "3.2.1"
+          "revision": "654d52d30f3dd4592e944c3e0bccb53178c992f6",
+          "version": "4.2.1"
         }
       },
       {
         "package": "PersistentValue",
         "repositoryURL": "https://github.com/crspybits/PersistentValue.git",
         "state": {
-          "branch": null,
-          "revision": "995657d86a2101abfc1bb72a2c631d8433707df0",
-          "version": "0.6.0"
+          "branch": "master",
+          "revision": "74adb41533af3e1205faf7f1852f2f7e6693f8c4",
+          "version": null
         }
       },
       {
