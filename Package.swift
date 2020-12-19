@@ -26,15 +26,15 @@ let package = Package(
         .target(
             name: "iOSGoogle",
             dependencies: [
-                "GoogleSignIn", "iOSSignIn", "ServerShared", "iOSShared"
+                "GSignIn", "iOSSignIn", "ServerShared", "iOSShared"
             ],
             resources: [
                 // Do *not* name this folder `Resources`. See https://stackoverflow.com/questions/52421999
                 .copy("Images")
             ]),
         .binaryTarget(
-            name: "GoogleSignIn",
-            path: "Frameworks/GoogleSignIn.xcframework"
+            name: "GSignIn",
+            path: "Frameworks/GSignIn.xcframework"
         ),
         .testTarget(
             name: "iOSGoogleTests",
