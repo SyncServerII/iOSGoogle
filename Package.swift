@@ -33,6 +33,7 @@ let package = Package(
                 .copy("Images")
             ]),
         .binaryTarget(
+            // This was generated using https://github.com/SyncServerII/GSignIn.git
             name: "GSignIn",
             path: "Frameworks/GSignIn.xcframework"
         ),
