@@ -90,7 +90,6 @@ class GoogleSignInOutButton : UIView {
         googleIconView.frame.origin = CGPoint.zero
         googleIconView.centerVerticallyInSuperview()
 
-        signInOutLabel.sizeToFit()
         signInOutLabel.frame.origin.x = iconSize * 1.7
         signInOutLabel.centerVerticallyInSuperview()
     }
@@ -129,16 +128,21 @@ class GoogleSignInOutButton : UIView {
         set {
             logger.debug("Change sign-in state: \(newValue)")
             
-            self._state = newValue
-            switch self._state! {
-            case .signIn:
-                signInOutLabel.text = signInText
-            
-            case .signOut:
-                signInOutLabel.text = signOutText
+            DispatchQueue.main.async {
+                self._state = newValue
+                switch self._state! {
+                case .signIn:
+                    self.signInOutLabel.text = self.signInText
+                
+                case .signOut:
+                    self.signInOutLabel.text = self.signOutText
+                }
+                
+                self.signInOutLabel.sizeToFit()
+                
+                self.setNeedsDisplay()
             }
-            
-            self.setNeedsDisplay()
+
         }
     }
 }
