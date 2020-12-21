@@ -142,7 +142,6 @@ class GoogleSignInOutButton : UIView {
                 
                 self.setNeedsDisplay()
             }
-
         }
     }
 }
