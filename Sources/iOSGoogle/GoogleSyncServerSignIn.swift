@@ -29,7 +29,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     fileprivate var autoSignIn = true
     weak var signInDelegate:GoogleSignInDelegate?
     
-    public init(serverClientId:String, appClientId:String, signInDelegate:GoogleSignInDelegate) {
+    public init(serverClientId:String, appClientId:String, signInDelegate:GoogleSignInDelegate?) {
         self.signInDelegate = signInDelegate
         self.serverClientId = serverClientId
         self.appClientId = appClientId
