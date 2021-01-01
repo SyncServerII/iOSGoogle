@@ -29,7 +29,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     fileprivate var autoSignIn = true
     weak var signInDelegate:GoogleSignInDelegate?
     
-    public init(serverClientId:String, appClientId:String, signInDelegate:GoogleSignInDelegate?) {
+    public init(serverClientId:String, appClientId:String, signInDelegate:GoogleSignInDelegate) {
         self.signInDelegate = signInDelegate
         self.serverClientId = serverClientId
         self.appClientId = appClientId
@@ -37,8 +37,8 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
         signInOutButton.delegate = self
     }
     
-    public var userType:UserType = .owning
-    public var cloudStorageType: CloudStorageType? = .Google
+    public let userType:UserType = .owning
+    public let cloudStorageType: CloudStorageType? = .Google
     
     public func appLaunchSetup(userSignedIn: Bool, withLaunchOptions options:[UIApplication.LaunchOptionsKey : Any]?) {
     
