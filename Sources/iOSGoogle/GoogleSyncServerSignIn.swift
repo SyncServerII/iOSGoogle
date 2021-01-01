@@ -38,7 +38,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     }
     
     public var userType:UserType = .owning
-    public let cloudStorageType: CloudStorageType? = .Google
+    public var cloudStorageType: CloudStorageType? = .Google
     
     public func appLaunchSetup(userSignedIn: Bool, withLaunchOptions options:[UIApplication.LaunchOptionsKey : Any]?) {
     
