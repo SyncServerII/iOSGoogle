@@ -13,6 +13,11 @@ import GSignIn
 import iOSSignIn
 import iOSShared
 
+// Discussion of using Google Sign In from sharing extension:
+// https://stackoverflow.com/questions/39139160
+// https://stackoverflow.com/questions/27082068
+// https://stackoverflow.com/questions/39139160
+
 // See https://developers.google.com/identity/sign-in/ios/sign-in
 public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     public var signInName: String = "Google"
@@ -52,7 +57,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
         */
 
         GIDSignIn.sharedInstance().delegate = self
-        
+                
         // Seem to need the following for accessing the serverAuthCode. Plus, you seem to need a "fresh" sign-in (not a silent sign-in). PLUS: serverAuthCode is *only* available when you don't do the silent sign in.
         // https://developers.google.com/identity/sign-in/ios/offline-access?hl=en
         GIDSignIn.sharedInstance().serverClientID = self.serverClientId
@@ -72,6 +77,8 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
         // See also this on refreshing of idTokens: http://stackoverflow.com/questions/33279485/how-to-refresh-authentication-idtoken-with-gidsignin-or-gidauthentication
         
         autoSignIn = userSignedIn
+        
+        //logger.debug("GIDSignIn.sharedInstance()?.hasPreviousSignIn(): \(String(describing: GIDSignIn.sharedInstance()?.hasPreviousSignIn()))")
         
         if userSignedIn {
             // I'm not sure if this is ever going to happen-- that we have non-nil creds on launch.
@@ -105,12 +112,11 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     
     public var credentials:GenericCredentials? {
         // hasAuthInKeychain can be true, and yet GIDSignIn.sharedInstance().currentUser can be nil. Seems to make more sense to test GIDSignIn.sharedInstance().currentUser.
-        if GIDSignIn.sharedInstance().currentUser == nil {
+        guard let currentUser = GIDSignIn.sharedInstance().currentUser else {
             return nil
         }
-        else {
-            return signedInUser(forUser: GIDSignIn.sharedInstance().currentUser)
-        }
+        
+        return signedInUser(forUser: currentUser)
     }
     
     func signedInUser(forUser user:GIDGoogleUser) -> GoogleCredentials {
