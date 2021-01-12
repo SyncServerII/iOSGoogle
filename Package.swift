@@ -32,10 +32,11 @@ let package = Package(
                 // Do *not* name this folder `Resources`. See https://stackoverflow.com/questions/52421999
                 .copy("Images")
             ]),
+        // See https://github.com/SyncServerII/GSignIn.git
         .binaryTarget(
-            // This was generated using https://github.com/SyncServerII/GSignIn.git
             name: "GSignIn",
-            path: "Frameworks/GSignIn.xcframework"
+            url: "https://github.com/SyncServerII/GSignIn/raw/main/XCFrameworks/GSignIn-5.0.2.xcframework.zip",
+            checksum: "b2b468ca98bcbe7d771726cd2a1ea6f9bee785957af8c9f4c75aa10e5c337a52"
         ),
         .testTarget(
             name: "iOSGoogleTests",
