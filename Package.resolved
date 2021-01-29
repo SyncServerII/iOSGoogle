@@ -5,18 +5,18 @@
         "package": "iOSShared",
         "repositoryURL": "https://github.com/SyncServerII/iOSShared.git",
         "state": {
-          "branch": "master",
-          "revision": "41fe05d0c698f4fd3140d50ac90d63ed7468ffb2",
-          "version": null
+          "branch": null,
+          "revision": "d610a64a56dad57bfa8fa9c21daa19f135e4f2fd",
+          "version": "0.0.2"
         }
       },
       {
         "package": "iOSSignIn",
         "repositoryURL": "https://github.com/SyncServerII/iOSSignIn.git",
         "state": {
-          "branch": "master",
-          "revision": "ba373d64232c20fea00cc5bbcea5f6681bddc564",
-          "version": null
+          "branch": null,
+          "revision": "a7679f9aeeefba4dd3ba30e33028910f934ce429",
+          "version": "0.0.3"
         }
       },
       {
@@ -32,18 +32,18 @@
         "package": "PersistentValue",
         "repositoryURL": "https://github.com/crspybits/PersistentValue.git",
         "state": {
-          "branch": "master",
-          "revision": "74adb41533af3e1205faf7f1852f2f7e6693f8c4",
-          "version": null
+          "branch": null,
+          "revision": "ede36cf07a63eec41f5cf100cd907d87e442843a",
+          "version": "0.7.1"
         }
       },
       {
         "package": "ServerShared",
         "repositoryURL": "https://github.com/SyncServerII/ServerShared.git",
         "state": {
-          "branch": "master",
-          "revision": "3321be105e430ca5dab5c3c2019841fdb1d12479",
-          "version": null
+          "branch": null,
+          "revision": "6c725c50cdb575c183943dcfcdb7394390a5e933",
+          "version": "0.0.4"
         }
       },
       {
