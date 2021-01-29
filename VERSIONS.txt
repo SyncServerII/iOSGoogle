@@ -1,5 +1,8 @@
 iOSGoogle
 	
+Version 0.0.3 (1/28/21)
+	Trying to fix XCFramework issue.
+	
 Version 0.0.2 (1/28/21)
 	Fix SPM issue.
 	

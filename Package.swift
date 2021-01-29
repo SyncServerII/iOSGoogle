@@ -14,6 +14,12 @@ let package = Package(
         .library(
             name: "iOSGoogle",
             targets: ["iOSGoogle"]),
+            
+        // Without this, Xcode is failing to archive the Neebla app project.
+        // See https://developer.apple.com/forums/thread/662247
+        .library(
+            name: "GSignIn",
+            targets: ["GSignIn"]),
     ],
     dependencies: [
         .package(url: "https://github.com/SyncServerII/iOSSignIn.git", from: "0.0.3"),
