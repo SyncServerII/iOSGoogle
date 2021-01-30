@@ -17,6 +17,12 @@ let package = Package(
             
         // Without this, Xcode is failing to archive the Neebla app project.
         // See https://developer.apple.com/forums/thread/662247
+        /* I also got the error when trying to upload to iTunes Connect:
+        App Store Connect Operation Error
+        ERROR ITMS-90680: "Invalid directory. The bundle Payload/Neebla.app/PlugIns/GSignIn.framework is not contained in a correctly named directory. It should be under "Frameworks"."
+         */
+        // Resolved by adding another archive-only build script with Neebla https://forums.swift.org/t/swift-package-binary-framework-issue/41922/2
+        // And see https://bugs.swift.org/browse/SR-13840
         .library(
             name: "GSignIn",
             targets: ["GSignIn"]),
