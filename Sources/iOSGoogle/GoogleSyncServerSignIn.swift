@@ -143,6 +143,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
 // MARK: UserSignIn methods.
 extension GoogleSyncServerSignIn {
     @objc public func signUserOut() {
+        logger.warning("signUserOut")
         stickySignIn = false
         GIDSignIn.sharedInstance().signOut()
         signInOutButton.buttonShowing = .signIn
@@ -173,19 +174,19 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
             var haveAuthToken = true
             if let error = error as NSError?, error.code == -4 {
                 haveAuthToken = false
-                logger.debug("GIDSignIn: Got a -4 error code")
+                logger.warning("GIDSignIn: Got a -4 error code")
             }
             
             if !haveAuthToken || !autoSignIn {
                 // Must be an explicit request by user.
                 signUserOut()
-                logger.debug("signUserOut: No auth token or not auto sign in")
+                logger.warning("signUserOut: No auth token or not auto sign in")
                 return
             }
             
             guard let user = user else {
                 signUserOut()
-                logger.debug("signUserOut: No user!")
+                logger.warning("signUserOut: No user!")
                 return
             }
             
@@ -199,16 +200,16 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
         
         guard let user = user else {
             signUserOut()
-            logger.debug("signUserOut: No error and no user!")
+            logger.warning("signUserOut: No error and no user!")
             return
         }
         
         // 11/14/18; I'm getting two calls to this delegate method, in rapid succession, on a sign in, with error == nil. And it's messing things up. Trying to avoid that.
         guard self.signInOutButton.buttonShowing != .signOut else {
-            logger.debug("GoogleSyncServerSignIn: avoiding 2x sign in issue.")
+            logger.warning("GoogleSyncServerSignIn: avoiding 2x sign in issue.")
             return
         }
-    
+
         self.signInOutButton.buttonShowing = .signOut
         let creds = signedInUser(forUser: user)
         delegate?.haveCredentials(self, credentials: creds)
@@ -219,6 +220,7 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
     
     public func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!)
     {
+        logger.error("\(String(describing: error))")
     }
 }
 
