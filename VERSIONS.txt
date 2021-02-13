@@ -1,5 +1,8 @@
 iOSGoogle
 
+Version 0.2.0 (2/12/21)
+	Persist creds in keychain.
+	
 Version 0.1.0 (2/8/21)
 	Improve logging
 	
