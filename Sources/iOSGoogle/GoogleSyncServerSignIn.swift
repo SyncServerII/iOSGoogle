@@ -12,6 +12,7 @@ import ServerShared
 import GSignIn
 import iOSSignIn
 import iOSShared
+import PersistentValue
 
 // Discussion of using Google Sign In from sharing extension:
 // https://stackoverflow.com/questions/39139160
@@ -34,12 +35,44 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     fileprivate var autoSignIn = true
     weak var signInDelegate:GoogleSignInDelegate?
     
+    static private let credentialsData = try! PersistentValue<Data>(name: "GoogleSyncServerSignIn.data", storage: .keyChain)
+    
     public init(serverClientId:String, appClientId:String, signInDelegate:GoogleSignInDelegate) {
         self.signInDelegate = signInDelegate
         self.serverClientId = serverClientId
         self.appClientId = appClientId
         super.init()
         signInOutButton.delegate = self
+    }
+    
+    static var savedCreds:GoogleSavedCreds? {
+        set {
+            let data = try? newValue?.toData()
+#if DEBUG
+            if let data = data {
+                let string = String(data: data, encoding: .utf8)
+                logger.debug("savedCreds: \(String(describing: string))")
+            }
+#endif
+            Self.credentialsData.value = data
+        }
+        
+        get {
+            guard let data = Self.credentialsData.value,
+                let savedCreds = try? GoogleSavedCreds.fromData(data) else {
+                return nil
+            }
+            return savedCreds
+        }
+    }
+    
+    public var credentials:GenericCredentials? {
+        if let savedCreds = Self.savedCreds {
+            return GoogleCredentials(savedCreds: savedCreds)
+        }
+        else {
+            return nil
+        }
     }
     
     public let userType:UserType = .owning
@@ -83,23 +116,37 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
         if userSignedIn {
             // I'm not sure if this is ever going to happen-- that we have non-nil creds on launch.
             if let creds = credentials {
-                delegate?.haveCredentials(self, credentials: creds)
+                self.userSignedIn(autoSignIn: true, credentials: creds)
+            }
+            else {
+                signUserOut(message: "No creds but userSignedIn == true")
             }
             
-            GIDSignIn.sharedInstance().restorePreviousSignIn()
+            // Going to rely on the creds I've saved.
+            // GIDSignIn.sharedInstance().restorePreviousSignIn()
         }
         else {
             // I'm doing this to force a user-signout, so that I get the serverAuthCode. Seems I only get this with the user explicitly signed out before hand.
-            GIDSignIn.sharedInstance().signOut()
+            signUserOut(message: "userSignedIn == false")
         }
     }
     
+    func userSignedIn(autoSignIn: Bool, credentials: GenericCredentials) {
+        self.autoSignIn = autoSignIn
+        stickySignIn = true
+        signInOutButton.buttonShowing = .signOut
+        delegate?.haveCredentials(self, credentials: credentials)
+        delegate?.signInCompleted(self, autoSignIn: autoSignIn)
+    }
+    
     public func networkChangedState(networkIsOnline: Bool) {
+        /*
         if stickySignIn && networkIsOnline && credentials == nil {
             autoSignIn = true
             logger.info("GoogleSignIn: Trying autoSignIn...")
             GIDSignIn.sharedInstance().restorePreviousSignIn()
         }
+        */
     }
 
     public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
@@ -109,32 +156,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     public var userIsSignedIn: Bool {
         return stickySignIn
     }
-    
-    public var credentials:GenericCredentials? {
-        // hasAuthInKeychain can be true, and yet GIDSignIn.sharedInstance().currentUser can be nil. Seems to make more sense to test GIDSignIn.sharedInstance().currentUser.
-        guard let currentUser = GIDSignIn.sharedInstance().currentUser else {
-            return nil
-        }
-        
-        return signedInUser(forUser: currentUser)
-    }
-    
-    func signedInUser(forUser user:GIDGoogleUser) -> GoogleCredentials {
-        let name = user.profile.name
-        let email = user.profile.email
 
-        let creds = GoogleCredentials()
-        creds.userId = user.userID
-        creds.email = email
-        creds.username = name
-        creds.accessToken = user.authentication.accessToken
-        logger.debug("user.serverAuthCode: \(String(describing: user.serverAuthCode))")
-        creds.serverAuthCode = user.serverAuthCode
-        creds.googleUser = user
-        
-        return creds
-    }
-    
     public func signInButton(configuration: [String : Any]?) -> UIView? {
         return signInOutButton
     }
@@ -143,8 +165,13 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
 // MARK: UserSignIn methods.
 extension GoogleSyncServerSignIn {
     @objc public func signUserOut() {
-        logger.warning("signUserOut")
+        signUserOut(message: nil)
+    }
+    
+    @objc public func signUserOut(message: String? = nil) {
+        logger.error("signUserOut: \(String(describing: message))")
         stickySignIn = false
+        Self.savedCreds = nil
         GIDSignIn.sharedInstance().signOut()
         signInOutButton.buttonShowing = .signIn
         delegate?.userIsSignedOut(self)
@@ -179,28 +206,16 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
             
             if !haveAuthToken || !autoSignIn {
                 // Must be an explicit request by user.
-                signUserOut()
-                logger.warning("signUserOut: No auth token or not auto sign in")
+                signUserOut(message: "No auth token or not auto sign in")
                 return
             }
             
-            guard let user = user else {
-                signUserOut()
-                logger.warning("signUserOut: No user!")
+            guard let creds = setupAndSaveCreds(user: user) else {
                 return
             }
-            
-            let creds = signedInUser(forUser: user)
-            delegate?.haveCredentials(self, credentials: creds)
-            signInOutButton.buttonShowing = .signOut
-            delegate?.signInCompleted(self, autoSignIn: false)
+
+            userSignedIn(autoSignIn: false, credentials: creds)
         
-            return
-        }
-        
-        guard let user = user else {
-            signUserOut()
-            logger.warning("signUserOut: No error and no user!")
             return
         }
         
@@ -209,18 +224,49 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
             logger.warning("GoogleSyncServerSignIn: avoiding 2x sign in issue.")
             return
         }
+        
+        guard let creds = setupAndSaveCreds(user: user) else {
+            return
+        }
 
-        self.signInOutButton.buttonShowing = .signOut
-        let creds = signedInUser(forUser: user)
-        delegate?.haveCredentials(self, credentials: creds)
-        stickySignIn = true
-        delegate?.signInCompleted(self, autoSignIn: false)
-        autoSignIn = false
+        userSignedIn(autoSignIn: false, credentials: creds)
     }
     
     public func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!)
     {
         logger.error("\(String(describing: error))")
+    }
+    
+    func setupAndSaveCreds(user: GIDGoogleUser?) -> GenericCredentials? {
+        guard let user = user else {
+            signUserOut(message: "signUserOut: No user!")
+            return nil
+        }
+        
+        guard let accessToken = user.authentication.accessToken else {
+            signUserOut(message: "No access token")
+            return nil
+        }
+        
+        guard let refreshToken = user.authentication.refreshToken else {
+            signUserOut(message: "No refresh token")
+            return nil
+        }
+        
+        guard let userID = user.userID else {
+            signUserOut(message: "No userID")
+            return nil
+        }
+        
+        logger.debug("user.serverAuthCode: \(String(describing: user.serverAuthCode))")
+        
+        Self.savedCreds = GoogleSavedCreds(accessToken: accessToken, refreshToken: refreshToken, userId: userID, username: user.profile.name, email: user.profile.email, serverAuthCode: user.serverAuthCode, googleUser: user)
+        guard let creds = credentials else {
+            signUserOut(message: "No credentials")
+            return nil
+        }
+        
+        return creds
     }
 }
 
