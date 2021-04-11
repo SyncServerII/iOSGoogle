@@ -50,8 +50,9 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
             let data = try? newValue?.toData()
 #if DEBUG
             if let data = data {
-                let string = String(data: data, encoding: .utf8)
-                logger.debug("savedCreds: \(String(describing: string))")
+                if let string = String(data: data, encoding: .utf8) {
+                    logger.debug("savedCreds: \(string)")
+                }
             }
 #endif
             Self.credentialsData.value = data
