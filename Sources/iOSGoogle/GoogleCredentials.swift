@@ -78,7 +78,10 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
         }
 
         googleUser.authentication.refreshTokens() { [weak self] auth, error in
-            guard let self = self else { return }
+            guard let self = self else {
+                logger.error("Error: No self!")
+                return
+            }
                         
             if let error = error {
                 logger.error("Error refreshing tokens: \(error)")
@@ -93,6 +96,7 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
                 return
             }
             
+            logger.debug("accessToken: \(accessToken)")
             logger.debug("refreshToken: \(String(describing: auth?.refreshToken))")
 
             logger.debug("refreshCredentials: Success")
