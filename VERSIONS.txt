@@ -1,5 +1,8 @@
 iOSGoogle
 
+Version 0.3.3 (4/26/21)
+	Improve debugging output.
+	
 Version 0.3.2 (4/18/21)
 	Improve debugging output.
 	

@@ -69,6 +69,9 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
         }
     }
     
+    // So we don't lose reference below
+    private var strongGoogleUser: GIDGoogleUser?
+    
     open func refreshCredentials(completion: @escaping (Swift.Error?) ->()) {
         // See also this on refreshing of idTokens: http://stackoverflow.com/questions/33279485/how-to-refresh-authentication-idtoken-with-gidsignin-or-gidauthentication
         
@@ -76,8 +79,10 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
             callCompletion(error: GoogleCredentialsError.noGoogleUser, completion: completion)
             return
         }
+        
+        self.strongGoogleUser = googleUser
 
-        googleUser.authentication.refreshTokens() { [weak self] auth, error in
+        self.strongGoogleUser?.authentication.refreshTokens() { [weak self] auth, error in
             guard let self = self else {
                 logger.error("Error: No self!")
                 return
