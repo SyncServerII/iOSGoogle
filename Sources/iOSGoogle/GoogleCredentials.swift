@@ -104,7 +104,7 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
             logger.debug("accessToken: \(accessToken)")
             logger.debug("refreshToken: \(String(describing: auth?.refreshToken))")
 
-            logger.debug("refreshCredentials: Success")
+            logger.notice("refreshCredentials: Success")
             self.savedCreds = GoogleSavedCreds(creds: self.savedCreds, accessToken: accessToken, refreshToken: self.savedCreds.refreshToken)
             GoogleSyncServerSignIn.savedCreds = self.savedCreds
             self.callCompletion(error: nil, completion: completion)
