@@ -6,6 +6,10 @@ import ServerShared
 import iOSShared
 
 public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertible {
+    public var emailAddress: String! {
+        return savedCreds.email
+    }
+    
     enum GoogleCredentialsError: Swift.Error {
         case noGoogleUser
         case credentialsRefreshError

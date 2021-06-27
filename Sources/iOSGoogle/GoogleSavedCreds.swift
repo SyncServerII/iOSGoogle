@@ -11,6 +11,10 @@ import GSignIn
 import iOSShared
 
 public class GoogleSavedCreds: GenericCredentialsCodable, Equatable {
+    public var emailAddress: String! {
+        return email
+    }
+    
     public var userId:String
     public var username:String?
     
