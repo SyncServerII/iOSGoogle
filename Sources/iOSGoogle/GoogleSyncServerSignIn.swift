@@ -9,7 +9,7 @@
 
 import Foundation
 import ServerShared
-import GSignIn
+import GoogleSignIn
 import iOSSignIn
 import iOSShared
 import PersistentValue
@@ -79,41 +79,25 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     public let userType:UserType = .owning
     public let cloudStorageType: CloudStorageType? = .Google
     
+    // 8/20/16; I had a difficult to resolve issue relating to scopes. I had re-created a file used by SharedNotes, outside of SharedNotes, and that applicastion was no longer able to access the file. See https://developers.google.com/drive/v2/web/scopes The fix to this issue was in two parts: 1) to change the scope to access all of the users files, and to 2) force updating of the access_token/refresh_token on the server. (I did this later part by hand-- it would be good to be able to force this automatically).
+    // "Per-file access to files created or opened by the app"
+    // GIDSignIn.sharedInstance().scopes.append("https://www.googleapis.com/auth/drive.file")
+    // I've also considered the Application Data Folder scope, but users cannot access the files in that-- which is against the goals in SyncServer.
+    // "Full, permissive scope to access all of a user's files."
+    var scopes: [String] {
+        return ["https://www.googleapis.com/auth/drive"]
+    }
+    
     public func appLaunchSetup(userSignedIn: Bool, withLaunchOptions options:[UIApplication.LaunchOptionsKey : Any]?) {
     
         stickySignIn = userSignedIn
-    
-        // 7/30/17; Seems this is not needed any more using the GoogleSignIn Cocoapod; see https://stackoverflow.com/questions/44398121/google-signin-cocoapod-deprecated
-        /*
-        var configureError: NSError?
-        GGLContext.sharedInstance().configureWithError(&configureError)
-        assert(configureError == nil, "Error configuring Google services: \(String(describing: configureError))")
-        */
 
-        GIDSignIn.sharedInstance().delegate = self
-                
-        // Seem to need the following for accessing the serverAuthCode. Plus, you seem to need a "fresh" sign-in (not a silent sign-in). PLUS: serverAuthCode is *only* available when you don't do the silent sign in.
-        // https://developers.google.com/identity/sign-in/ios/offline-access?hl=en
-        GIDSignIn.sharedInstance().serverClientID = self.serverClientId
-        GIDSignIn.sharedInstance().clientID = self.appClientId
-
-        // 8/20/16; I had a difficult to resolve issue relating to scopes. I had re-created a file used by SharedNotes, outside of SharedNotes, and that application was no longer able to access the file. See https://developers.google.com/drive/v2/web/scopes The fix to this issue was in two parts: 1) to change the scope to access all of the users files, and to 2) force updating of the access_token/refresh_token on the server. (I did this later part by hand-- it would be good to be able to force this automatically).
-        
-        // "Per-file access to files created or opened by the app"
-        // GIDSignIn.sharedInstance().scopes.append("https://www.googleapis.com/auth/drive.file")
-        // I've also considered the Application Data Folder scope, but users cannot access the files in that-- which is against the goals in SyncServer.
-        
-        // "Full, permissive scope to access all of a user's files."
-        GIDSignIn.sharedInstance().scopes.append("https://www.googleapis.com/auth/drive")
-        
         // 12/20/15; Trying to resolve my user sign in issue
         // It looks like, at least for Google Drive, calling this method is sufficient for dealing with rcStaleUserSecurityInfo. I.e., having the IdToken for Google become stale. (Note that while it deals with the IdToken becoming stale, dealing with an expired access token on the server is a different matter-- and the server seems to need to refresh the access token from the refresh token to deal with this independently).
         // See also this on refreshing of idTokens: http://stackoverflow.com/questions/33279485/how-to-refresh-authentication-idtoken-with-gidsignin-or-gidauthentication
         
         autoSignIn = userSignedIn
-        
-        //logger.debug("GIDSignIn.sharedInstance()?.hasPreviousSignIn(): \(String(describing: GIDSignIn.sharedInstance()?.hasPreviousSignIn()))")
-        
+                
         if userSignedIn {
             // I'm not sure if this is ever going to happen-- that we have non-nil creds on launch.
             if let creds = credentials {
@@ -151,7 +135,7 @@ public class GoogleSyncServerSignIn : NSObject, GenericSignIn {
     }
 
     public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        return GIDSignIn.sharedInstance().handle(url)
+        return GIDSignIn.sharedInstance.handle(url)
     }
     
     public var userIsSignedIn: Bool {
@@ -173,50 +157,102 @@ extension GoogleSyncServerSignIn {
         logger.error("signUserOut: \(String(describing: message))")
         stickySignIn = false
         Self.savedCreds = nil
-        GIDSignIn.sharedInstance().signOut()
+        GIDSignIn.sharedInstance.signOut()
         signInOutButton.buttonShowing = .signIn
         delegate?.userIsSignedOut(self)
     }
 }
 
-extension GoogleSyncServerSignIn : GIDSignInDelegate {
-    public func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!)
-    {
-        DispatchQueue.main.async {
-            self.didSignInHelper(user: user, error: error)
+extension GoogleSyncServerSignIn {
+    func setupAndSaveCreds(user: GIDGoogleUser?) -> GenericCredentials? {
+        guard let user = user else {
+            signUserOut(message: "signUserOut: No user!")
+            return nil
         }
+        
+        let accessToken = user.authentication.accessToken
+        let refreshToken = user.authentication.refreshToken
+        
+        guard let userID = user.userID else {
+            signUserOut(message: "No userID")
+            return nil
+        }
+
+        logger.debug("user.serverAuthCode: \(String(describing: user.serverAuthCode))")
+        
+        Self.savedCreds = GoogleSavedCreds(accessToken: accessToken, refreshToken: refreshToken, userId: userID, username: user.profile?.name, email: user.profile?.email, serverAuthCode: user.serverAuthCode, googleUser: user)
+        guard let creds = credentials else {
+            signUserOut(message: "No credentials")
+            return nil
+        }
+        
+        return creds
+    }
+}
+
+extension GoogleSyncServerSignIn: GoogleSignInOutButtonDelegate {
+    func signInStarted(_ button: GoogleSignInOutButton) {
+        delegate?.signInStarted(self)
+        let signInConfig = GIDConfiguration(clientID: self.appClientId, serverClientID: self.serverClientId)
+
+        guard let viewController = signInDelegate?.getCurrentViewController() else {
+            // Get a crash without a view controller.
+            logger.error("Disabling Google Sign In because we have no view controller")
+            signUserOut()
+            return
+        }
+        
+        GIDSignIn.sharedInstance.signIn(with: signInConfig, presenting: viewController) { [weak self] googleUser, error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                self.errorHelper(user: googleUser, error: error)
+                return
+            }
+            
+            GIDSignIn.sharedInstance.addScopes(self.scopes, presenting: viewController) { googleUser, error in
+                self.didSignInHelper(user: googleUser, error: error)
+            }
+        }
+    }
+    
+    func signUserOut(_ button: GoogleSignInOutButton) {
+        signUserOut()
+    }
+    
+    func errorHelper(user: GIDGoogleUser?, error: Error) {
+        logger.error("Error signing into Google: \(error)")
+        
+        // 10/22/17; Not always signing the user out here. It doesn't make sense if we get an error during launch. It doesn't make sense if we're attempting to do a creds refresh automatically when the app is running. It can make sense, however, if this is an explicit request by the user to sign-in.
+        
+        // See https://github.com/crspybits/SharedImages/issues/64
+        /* From the delegate, error is actually an NSError:
+                    - (void)signIn:(GIDSignIn *)signIn
+            didSignInForUser:(GIDGoogleUser *)user
+                   withError:(NSError *)error;
+        */
+        var haveAuthToken = true
+        if let error = error as NSError?, error.code == -4 {
+            haveAuthToken = false
+            logger.warning("GIDSignIn: Got a -4 error code")
+        }
+        
+        if !haveAuthToken || !autoSignIn {
+            // Must be an explicit request by user.
+            signUserOut(message: "No auth token or not auto sign in")
+            return
+        }
+        
+        guard let creds = setupAndSaveCreds(user: user) else {
+            return
+        }
+
+        userSignedIn(autoSignIn: false, credentials: creds)
     }
     
     func didSignInHelper(user: GIDGoogleUser?, error: Error?) {
         if let error = error {
-            logger.error("Error signing into Google: \(error)")
-            
-            // 10/22/17; Not always signing the user out here. It doesn't make sense if we get an error during launch. It doesn't make sense if we're attempting to do a creds refresh automatically when the app is running. It can make sense, however, if this is an explicit request by the user to sign-in.
-            
-            // See https://github.com/crspybits/SharedImages/issues/64
-            /* From the delegate, error is actually an NSError:
-                        - (void)signIn:(GIDSignIn *)signIn
-                didSignInForUser:(GIDGoogleUser *)user
-                       withError:(NSError *)error;
-            */
-            var haveAuthToken = true
-            if let error = error as NSError?, error.code == -4 {
-                haveAuthToken = false
-                logger.warning("GIDSignIn: Got a -4 error code")
-            }
-            
-            if !haveAuthToken || !autoSignIn {
-                // Must be an explicit request by user.
-                signUserOut(message: "No auth token or not auto sign in")
-                return
-            }
-            
-            guard let creds = setupAndSaveCreds(user: user) else {
-                return
-            }
-
-            userSignedIn(autoSignIn: false, credentials: creds)
-        
+            errorHelper(user: user, error: error)
             return
         }
         
@@ -231,56 +267,5 @@ extension GoogleSyncServerSignIn : GIDSignInDelegate {
         }
 
         userSignedIn(autoSignIn: false, credentials: creds)
-    }
-    
-    public func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!)
-    {
-        logger.error("\(String(describing: error))")
-    }
-    
-    func setupAndSaveCreds(user: GIDGoogleUser?) -> GenericCredentials? {
-        guard let user = user else {
-            signUserOut(message: "signUserOut: No user!")
-            return nil
-        }
-        
-        guard let accessToken = user.authentication.accessToken else {
-            signUserOut(message: "No access token")
-            return nil
-        }
-        
-        guard let refreshToken = user.authentication.refreshToken else {
-            signUserOut(message: "No refresh token")
-            return nil
-        }
-        
-        guard let userID = user.userID else {
-            signUserOut(message: "No userID")
-            return nil
-        }
-        
-        logger.debug("user.serverAuthCode: \(String(describing: user.serverAuthCode))")
-        
-        Self.savedCreds = GoogleSavedCreds(accessToken: accessToken, refreshToken: refreshToken, userId: userID, username: user.profile.name, email: user.profile.email, serverAuthCode: user.serverAuthCode, googleUser: user)
-        guard let creds = credentials else {
-            signUserOut(message: "No credentials")
-            return nil
-        }
-        
-        return creds
-    }
-}
-
-extension GoogleSyncServerSignIn: GoogleSignInOutButtonDelegate {
-    func signInStarted(_ button: GoogleSignInOutButton) {
-        delegate?.signInStarted(self)
-    }
-    
-    func signUserOut(_ button: GoogleSignInOutButton) {
-        signUserOut()
-    }
-    
-    func getCurrentViewController(_ button: GoogleSignInOutButton) -> UIViewController? {
-        return signInDelegate?.getCurrentViewController()
     }
 }

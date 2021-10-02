@@ -7,7 +7,7 @@
 
 import Foundation
 import iOSSignIn
-import GSignIn
+import GoogleSignIn
 import iOSShared
 
 public class GoogleSavedCreds: GenericCredentialsCodable, Equatable {
@@ -52,7 +52,7 @@ public class GoogleSavedCreds: GenericCredentialsCodable, Equatable {
         }
     }
     
-    // The `GIDGoogleUser` is needed to do the credentials referesh in `GoogleCredentials`.
+    // The `GIDGoogleUser` is needed to do the credentials refresh in `GoogleCredentials`.
     public init(accessToken: String, refreshToken: String, userId:String, username:String?, email:String?, serverAuthCode: String?, googleUser:GIDGoogleUser?) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken

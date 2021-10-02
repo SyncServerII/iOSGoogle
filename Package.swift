@@ -14,23 +14,12 @@ let package = Package(
         .library(
             name: "iOSGoogle",
             targets: ["iOSGoogle"]),
-            
-        // Without this, Xcode is failing to archive the Neebla app project.
-        // See https://developer.apple.com/forums/thread/662247
-        /* I also got the error when trying to upload to iTunes Connect:
-        App Store Connect Operation Error
-        ERROR ITMS-90680: "Invalid directory. The bundle Payload/Neebla.app/PlugIns/GSignIn.framework is not contained in a correctly named directory. It should be under "Frameworks"."
-         */
-        // Resolved by adding another archive-only build script with Neebla https://forums.swift.org/t/swift-package-binary-framework-issue/41922/2
-        // And see https://bugs.swift.org/browse/SR-13840
-        .library(
-            name: "GSignIn",
-            targets: ["GSignIn"]),
     ],
     dependencies: [
         .package(url: "https://github.com/SyncServerII/iOSSignIn.git", from: "0.0.3"),
         .package(url: "https://github.com/SyncServerII/ServerShared.git", from: "0.0.4"),
         .package(url: "https://github.com/SyncServerII/iOSShared.git", from: "0.0.2"),
+        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "6.0.2"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -38,18 +27,13 @@ let package = Package(
         .target(
             name: "iOSGoogle",
             dependencies: [
-                "GSignIn", "iOSSignIn", "ServerShared", "iOSShared"
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
+                "iOSSignIn", "ServerShared", "iOSShared"
             ],
             resources: [
                 // Do *not* name this folder `Resources`. See https://stackoverflow.com/questions/52421999
                 .copy("Images")
             ]),
-        // See https://github.com/SyncServerII/GSignIn.git
-        .binaryTarget(
-            name: "GSignIn",
-            url: "https://github.com/SyncServerII/GSignIn/raw/main/XCFrameworks/GSignIn-5.0.2.xcframework.zip",
-            checksum: "b2b468ca98bcbe7d771726cd2a1ea6f9bee785957af8c9f4c75aa10e5c337a52"
-        ),
         .testTarget(
             name: "iOSGoogleTests",
             dependencies: ["iOSGoogle"],

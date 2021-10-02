@@ -2,12 +2,48 @@
   "object": {
     "pins": [
       {
+        "package": "AppAuth",
+        "repositoryURL": "https://github.com/openid/AppAuth-iOS.git",
+        "state": {
+          "branch": null,
+          "revision": "01131d68346c8ae552961c768d583c715fbe1410",
+          "version": "1.4.0"
+        }
+      },
+      {
+        "package": "GoogleSignIn",
+        "repositoryURL": "https://github.com/google/GoogleSignIn-iOS.git",
+        "state": {
+          "branch": null,
+          "revision": "27bc94f5e1bd1f3b12ba5abb2230dd77dd143f1e",
+          "version": "6.0.2"
+        }
+      },
+      {
+        "package": "GTMSessionFetcher",
+        "repositoryURL": "https://github.com/google/gtm-session-fetcher.git",
+        "state": {
+          "branch": null,
+          "revision": "bc6a19702ac76ac4e488b68148710eb815f9bc56",
+          "version": "1.7.0"
+        }
+      },
+      {
+        "package": "GTMAppAuth",
+        "repositoryURL": "https://github.com/google/GTMAppAuth.git",
+        "state": {
+          "branch": null,
+          "revision": "40f4103fb52109032c05599a0c39ad43edbdf80a",
+          "version": "1.2.2"
+        }
+      },
+      {
         "package": "iOSShared",
         "repositoryURL": "https://github.com/SyncServerII/iOSShared.git",
         "state": {
           "branch": null,
-          "revision": "6ffc6d8726b1afe63e218cec3bd19c6a4b41bb80",
-          "version": "0.14.1"
+          "revision": "1795da58d2cde2e92710e9ca9f514b7d5e1d54ea",
+          "version": "0.17.1"
         }
       },
       {
@@ -15,8 +51,8 @@
         "repositoryURL": "https://github.com/SyncServerII/iOSSignIn.git",
         "state": {
           "branch": null,
-          "revision": "fc4cd030e21f224c4bab721ceaedef984dc82b4c",
-          "version": "0.5.0"
+          "revision": "6219dc141c4bc8aeeddd71fd40be4062cd678634",
+          "version": "0.5.1"
         }
       },
       {
@@ -42,8 +78,8 @@
         "repositoryURL": "https://github.com/SyncServerII/ServerShared.git",
         "state": {
           "branch": null,
-          "revision": "e2669df3641318ae906a9060849ec35c0f993794",
-          "version": "0.10.8"
+          "revision": "44fb423bac86c9c32ff0febdbb95cefe039bf75f",
+          "version": "0.14.1"
         }
       },
       {
@@ -51,8 +87,8 @@
         "repositoryURL": "https://github.com/stephencelis/SQLite.swift.git",
         "state": {
           "branch": null,
-          "revision": "0a9893ec030501a3956bee572d6b4fdd3ae158a1",
-          "version": "0.12.2"
+          "revision": "9af51e2edf491c0ea632e369a6566e09b65aa333",
+          "version": "0.13.0"
         }
       },
       {

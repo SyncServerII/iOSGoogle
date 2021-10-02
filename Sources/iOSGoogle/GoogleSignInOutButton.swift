@@ -1,13 +1,12 @@
 
 import Foundation
 import UIKit
-import GSignIn
+import GoogleSignIn
 import iOSShared
 
 protocol GoogleSignInOutButtonDelegate: AnyObject {
     func signInStarted(_ button: GoogleSignInOutButton)
     func signUserOut(_ button: GoogleSignInOutButton)
-    func getCurrentViewController(_ button: GoogleSignInOutButton) -> UIViewController?
 }
 
 class GoogleSignInOutButton : UIView {
@@ -107,18 +106,7 @@ class GoogleSignInOutButton : UIView {
     
     override public func layoutSubviews() {
         super.layoutSubviews()
-        
         layout(with: frame)
-        
-        // A bit of a hack, but I needed a handle on which to call this method.
-        guard let viewController = delegate?.getCurrentViewController(self) else {
-            // Get a crash without a view controller.
-            logger.error("Disabling Google Sign In because we have no view controller")
-            isUserInteractionEnabled = false
-            return
-        }
-        
-        GIDSignIn.sharedInstance().presentingViewController = viewController
     }
     
     enum State {

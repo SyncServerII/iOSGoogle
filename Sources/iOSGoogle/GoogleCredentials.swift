@@ -1,7 +1,7 @@
 
 import Foundation
 import iOSSignIn
-import GSignIn
+import GoogleSignIn
 import ServerShared
 import iOSShared
 
@@ -85,8 +85,7 @@ public class GoogleCredentials : GenericCredentials, CustomDebugStringConvertibl
         }
         
         self.strongGoogleUser = googleUser
-
-        self.strongGoogleUser?.authentication.refreshTokens() { [weak self] auth, error in
+        self.strongGoogleUser?.authentication.do { [weak self] auth, error in
             guard let self = self else {
                 logger.error("Error: No self!")
                 return
